@@ -1,0 +1,51 @@
+# ==============================================================================
+# SECTION 22: PHP2SHELL MEMORY ANOMALY DETECTION FILTER & ANTI-OOM SANITIZER
+# ==============================================================================
+# This component explicitly hardens the FastAPI ingestion backplane against 
+# autonomous AI agent attacks targeting CVE-2026-109618 and CVE-2026-109619.
+
+class YoloPHPAntiExploitFilter:
+    def __init__(self, max_payload_bytes: int = 2097152): # Restricts payloads strictly to 2MB
+        self.max_payload_bytes = max_payload_bytes
+        # Suspicious regex patterns typical of AI agent memory-fuzzing shellcode strings
+        self.malicious_memory_markers = [
+            b"longjmp", b"php2shell", b"ini_set('memory_limit'", b"OOM_trigger"
+        ]
+
+    async def inspect_and_sanitize_request(self, request: Request, raw_body: bytes) -> bool:
+        """
+        Scans incoming data payloads to detect and block automated AI fuzzer strings.
+        Actively intercepts oversized chunks to neutralize deliberate OOM triggers.
+        """
+        # 1. Enforce strict length boundaries to prevent memory allocation exhaustion
+        if len(raw_body) > self.max_payload_bytes:
+            print(f"[ALERT] Oversized payload blocked: {len(raw_body)} bytes. Potential OOM attack vector neutralized.")
+            return False
+
+        # 2. Perform deep packet inspection for unauthenticated remote code signatures
+        for signature_marker in self.malicious_memory_markers:
+            if signature_marker in raw_body:
+                tenant_id = request.headers.get("X-Tenant-ID", "UNKNOWN")
+                print(f"[SECURITY ALERT] Malicious AI Agent signature '{signature_marker.decode()}' intercepted for Tenant: {tenant_id}!")
+                return False
+
+        return True
+
+# --- FASTAPI APPARATUS MIDDLEWARE INTEGRATION HOOK ---
+# Place this code logic straight into your global middleware dispatch routing setup:
+"""
+exploit_filter = YoloPHPAntiExploitFilter()
+
+@app.middleware("http")
+async def security_hardening_layer(request: Request, call_next):
+    if request.url.path == "/v2/webhook/ingest":
+        # Read a shallow copy of the payload bytes to execute inspection rules safely
+        raw_body = await request.body()
+        is_safe = await exploit_filter.inspect_and_sanitize_request(request, raw_body)
+        if not is_safe:
+            raise HTTPException(
+                status_code=403, 
+                detail="Request rejected: Payload contains signatures matching active PHP2Shell exploit matrices."
+            )
+    return await call_next(request)
+"""
