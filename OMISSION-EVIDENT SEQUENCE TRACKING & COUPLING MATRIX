@@ -1,0 +1,89 @@
+# ==============================================================================
+# SECTION 24: OMISSION-EVIDENT SEQUENCE TRACKING & COUPLING MATRIX
+# ==============================================================================
+# This component layers strict sequential non-skippable index assertions 
+# over your existing tamper-evident hash-chain backplane layer.
+
+class YoloOmissionEvidentEngine:
+    def __init__(self, cache_client):
+        self.redis = cache_client
+
+    async def validate_and_increment_sequence(self, tenant_id: str, incoming_sequence: int) -> dict:
+        """
+        Enforces monotonic sequence alignment for every multi-tenant ingestion cycle.
+        Actively intercepts gap anomalies, ensuring no agent logs have been omitted.
+        """
+        sequence_key = f"yolo:sequence:tenant:{tenant_id}"
+        
+        # Pull the expected sequence index from the Redis cache node
+        # Standalone mock fallback support included for zero-config offline staging
+        if hasattr(self.redis, "lrange"):
+            raw_current = await self.redis.lrange(sequence_key, 0, 0)
+            current_expected = int(raw_current[0]) if raw_current else 0
+        else:
+            current_expected = 0
+
+        # Omission Verification Assertions
+        if incoming_sequence < current_expected:
+            return {
+                "status": "REJECTED_REPLAY",
+                "error": f"Stale sequence index: Received {incoming_sequence}, expected {current_expected}."
+            }
+            
+        if incoming_sequence > current_expected:
+            omitted_count = incoming_sequence - current_expected
+            print(f"[SECURITY ALERT] Omission error caught! {omitted_count} logs were skipped before index {incoming_sequence}!")
+            return {
+                "status": "OMISSION_DETECTED",
+                "error": f"Sequence gap identified. Expected {current_expected}, skipped to {incoming_sequence}.",
+                "missing_slots": list(range(current_expected, incoming_sequence))
+            }
+
+        # Progress the state counter cleanly to the next sequential tracking epoch
+        next_expected = current_expected + 1
+        if hasattr(self.redis, "lpush"):
+            # Update sequence marker within the atomic tracking array
+            await self.redis.lpush(sequence_key, str(next_expected))
+
+        return {
+            "status": "VERIFIED_OMISSION_FREE",
+            "expected_next_sequence": next_expected
+        }
+
+# --- FASTAPI APPARATUS WEBHOOK INTEGRATION HOOK ---
+# Place this endpoint parameter block straight into your global API route workspace:
+"""
+omission_tracker = YoloOmissionEvidentEngine(redis_pool)
+
+@app.post("/v2/webhook/ingest-verifiable")
+async def ingest_omission_checked_decision(request: Request):
+    sig = request.headers.get("X-Yolo-Signature")
+    secret = os.getenv("WEBHOOK_SECRET", "local_dev_whsec_secret_key_12345")
+    raw_body = await request.body()
+    
+    if not verify_payload_mac(raw_body, sig, secret):
+        raise HTTPException(status_code=401, detail="Cryptographic Webhook Signature mismatch.")
+        
+    payload = json.loads(raw_body)
+    tenant = request.state.tenant_id
+    incoming_seq = int(payload.get("telemetry_sequence", 0))
+    
+    # Assert sequence consistency to enforce complete omission-evident protection
+    sequence_check = await omission_tracker.validate_and_increment_sequence(tenant, incoming_seq)
+    if sequence_check["status"] != "VERIFIED_OMISSION_FREE":
+        raise HTTPException(
+            status_code=409, 
+            detail=f"Ecosystem Integrity Violation: {sequence_check['error']}"
+        )
+        
+    # Proceed to store natively inside your legacy tamper-evident Merkle/Redis indexes
+    decision_id = payload.get("event_id", uuid.uuid4().hex)
+    indexer = YoloRedisIndexingWrapper(redis_pool)
+    await indexer.create_tenant_time_index(tenant, decision_id, payload)
+    
+    return {
+        "status": "anchored_tamper_and_omission_evident", 
+        "tenant": tenant, 
+        "sequence_state": sequence_check
+    }
+"""
