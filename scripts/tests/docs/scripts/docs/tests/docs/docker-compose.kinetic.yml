@@ -1,0 +1,60 @@
+# ==============================================================================
+# SECTION 51: PRODUCTION-GRADE KINETIC ORCHESTRATION PROFILE (docker-compose.yml)
+# ==============================================================================
+version: '3.8'
+
+services:
+  nginx_edge_gate:
+    image: nginx:alpine
+    container_name: yolo_kinetic_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - kinetic_backend_api
+    networks:
+      - yolo_kinetic_net
+    restart: always
+
+  kinetic_backend_api:
+    build:
+      context: .
+      dockerfile: Dockerfile.kinetic
+    container_name: yolo_kinetic_core
+    environment:
+      - REDIS_URL=redis://user:national_security_password_matrix_999@yolo_kinetic_cache:6379/0
+      - BASE_RPC_URL=https://base.org
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-local_dev_whsec_secret_key_12345}
+    depends_on:
+      - yolo_kinetic_cache
+    networks:
+      - yolo_kinetic_net
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    restart: always
+
+  yolo_kinetic_cache:
+    image: redis:7-alpine
+    container_name: yolo_kinetic_cache
+    command: redis-server --appendonly yes --requirepass national_security_password_matrix_999
+    ports:
+      - "6379:6379"
+    volumes:
+      - kinetic_redis_vault:/data
+    networks:
+      - yolo_kinetic_net
+    restart: always
+
+volumes:
+  kinetic_redis_vault:
+
+networks:
+  yolo_kinetic_net:
+    driver: bridge
+    internal: false
