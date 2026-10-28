@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org",
+  "title": "SovereignTreatyAuditLog",
+  "description": "Enforces strict data minimization for zero-knowledge geopolitical treaty validation tracking.",
+  "type": "object",
+  "required": [
+    "epoch_timestamp",
+    "signatory_state_id_hash",
+    "telemetry_sequence",
+    "zk_proof_manifest"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "epoch_timestamp": {
+      "type": "integer",
+      "description": "Unix timestamp tracking the exact millisecond of the ledger insertion epoch."
+    },
+    "signatory_state_id_hash": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$",
+      "description": "Cryptographic identifier hash masking the identity of the submitting nation-state."
+    },
+    "telemetry_sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Monotonically increasing sequence index to protect against data omission attacks."
+    },
+    "zk_proof_manifest": {
+      "type": "object",
+      "required": ["circuit_target_root", "proof_core_bytes"],
+      "additionalProperties": false,
+      "properties": {
+        "circuit_target_root": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "The public numeric commitment root verified inside the R1CS constraint matrix."
+        },
+        "proof_core_bytes": {
+          "type": "string",
+          "description": "Base64URL encoded cryptographic proof token generated via Groth16 or Plonk."
+        }
+      }
+    }
+  }
+}
