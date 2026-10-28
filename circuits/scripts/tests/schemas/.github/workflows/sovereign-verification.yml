@@ -1,0 +1,58 @@
+# ==============================================================================
+# SECTION 33: AUTOMATED SOVEREIGN INTEGRITY & COMPLIANCE GATE PIPELINE
+# ==============================================================================
+name: Sovereign Trust & Verification Suite
+
+on:
+  push:
+    branches: [ "main", "release/*" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-compliance-matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Repository Code
+        uses: actions/checkout@v4
+
+      - name: Bootstrap Node.js Runtime Environment
+        uses: actions/setup-node@v4
+        with:
+          node_version: '20'
+          cache: 'npm'
+          cache-dependency-path: './package.json'
+
+      - name: Install Prerequisite System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgmp-dev
+          sudo rm -rf /var/lib/apt/lists/*
+
+      - name: Provision Global SnarkJS Toolchain
+        run: npm install -g snarkjs@0.7.4
+
+      - name: Setup Python Runtime Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Application Dependency Packages
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Execute Anti-Exploit & Configuration Unit Tests
+        run: |
+          python3 tests/test_config_manager.py
+          python3 tests/test_exploit_filter.py
+
+      - name: Execute Multi-Tenant Omission Ingestion Diagnostics
+        run: python3 tests/test_routing.py
+
+      - name: Validate Sovereign Zero-Knowledge Integrity Assertions
+        run: python3 tests/test_sovereign_zk.py
