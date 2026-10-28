@@ -1,0 +1,36 @@
+{
+  "topology_name": "YOLO-Global-Sovereign-Mesh",
+  "version": "6.0.0",
+  "global_hub": {
+    "datacenter_id": "central-hub-eu-west",
+    "verification_endpoint": "https://yolo.internal",
+    "replication_factor": 3,
+    "consensus_protocol": "Raft-PQC-Lattice"
+  },
+  "regional_spokes": [
+    {
+      "region_id": "us-east-gov",
+      "network_zone": "isolated-subnet-alpha",
+      "local_cache_url": "redis://us-east-cache.internal:6379/0",
+      "namespacing_prefix": "global:hub:region:us-east-gov",
+      "max_ops_per_second_threshold": 50000,
+      "failover_target_region": "us-west-gov"
+    },
+    {
+      "region_id": "eu-west-sovereign",
+      "network_zone": "isolated-subnet-beta",
+      "local_cache_url": "redis://eu-west-cache.internal:6379/0",
+      "namespacing_prefix": "global:hub:region:eu-west-sovereign",
+      "max_ops_per_second_threshold": 50000,
+      "failover_target_region": "eu-central-sovereign"
+    },
+    {
+      "region_id": "ap-south-defense",
+      "network_zone": "isolated-subnet-gamma",
+      "local_cache_url": "redis://ap-south-cache.internal:6379/0",
+      "namespacing_prefix": "global:hub:region:ap-south-defense",
+      "max_ops_per_second_threshold": 30000,
+      "failover_target_region": "ap-east-defense"
+    }
+  ]
+}
