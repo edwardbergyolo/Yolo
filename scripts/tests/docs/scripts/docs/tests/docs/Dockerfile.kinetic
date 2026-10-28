@@ -1,0 +1,57 @@
+# ==============================================================================
+# SECTION 50: IMMUTABLE KINETIC ENCLAVE CONTAINER APPLIANCE
+# ==============================================================================
+# Stage 1: Build & compilation isolation tier
+FROM python:3.11-slim-bookworm AS kinetic_builder
+
+WORKDIR /src
+
+# Provision core tools required for secure mathematical compiling lines
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgmp-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+
+# Install dependencies into a localized wheelhouse path to preserve space
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+
+# Stage 2: Lean runtime execution environment
+FROM python:3.11-slim-bookworm AS kinetic_runner
+
+WORKDIR /app
+
+# Ensure basic core cryptographic and runtime tracking binaries are kept
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgmp-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Establish kernel-level configuration flags for dynamic memory boundaries
+ENV PATH="/home/kinetic_worker/.local/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Establish a non-privileged, dedicated service account with explicit IDs
+RUN useradd -u 40001 -m kinetic_worker
+USER kinetic_worker
+
+# Extract compiled python dependencies safely from builder stage
+COPY --from=kinetic_builder /root/.local /home/kinetic_worker/.local
+
+# Copy core framework configurations and fluid state modules natively
+COPY --chown=kinetic_worker:kinetic_worker requirements.txt .
+COPY --chown=kinetic_worker:kinetic_worker yolo_master_core.py .
+COPY --chown=kinetic_worker:kinetic_worker config_manager.py .
+
+# Expose the default edge webhook service interface entry point
+EXPOSE 8000
+
+# Automated orchestration health check hook for active validation loops
+HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/v2/health || exit 1
+
+# Execute server initialization protocols within the hardware-enclave space
+ENTRYPOINT ["python", "yolo_master_core.py"]
