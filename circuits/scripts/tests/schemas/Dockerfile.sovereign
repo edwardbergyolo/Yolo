@@ -1,0 +1,56 @@
+# ==============================================================================
+# SECTION 32: IMMUTABLE SOVEREIGN ZK TOOLCHAIN BUILD PROFILE
+# ==============================================================================
+FROM debian:bookworm-slim AS compiler_builder
+
+WORKDIR /src
+
+# Install basic compiler toolchain blocks inside the perimeter layer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    libgmp-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust natively to facilitate localized Circom binary compilation
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
+RUN curl --proto '=https' --tlsv1.2 -sSf https://rustup.rs | sh -s -- -y --default-toolchain stable
+
+# Pull down and build the canonical Circom compilation engine from offline assets
+# Note: For air-gapped staging, this requires local tarball mirroring loops
+RUN git clone https://github.com \
+    && cd circom \
+    && cargo build --release \
+    && cargo install --path circom
+
+# Final runtime execution context layer
+FROM node:20-bookworm-slim AS sovereign_runner
+
+WORKDIR /sovereign
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgmp-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Extract the compiled compiler binaries directly from the builder stage context safely
+COPY --from=compiler_builder /usr/local/cargo/bin/circom /usr/local/bin/circom
+
+# Install standard snarkjs utility commands within the user footprint space
+RUN npm install -g snarkjs@0.7.4
+
+# Create non-privileged deployment worker environments
+RUN useradd -u 20001 -m gov_worker
+USER gov_worker
+
+# Populate localized folder spaces
+COPY --chown=gov_worker:gov_worker circuits/ ./circuits/
+COPY --chown=gov_worker:gov_worker scripts/ ./scripts/
+
+# Generate constraint calculations instantly inside the isolated container layout
+RUN circom circuits/SovereignTreatyCompliance.circom --r1cs --wasm --sym -o ./
+
+ENTRYPOINT ["snarkjs"]
+CMD ["--help"]
