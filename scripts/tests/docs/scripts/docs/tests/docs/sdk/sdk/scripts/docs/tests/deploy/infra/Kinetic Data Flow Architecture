@@ -1,0 +1,62 @@
+[ RUNTIME INGESTION SURFACE ]
+  Autonomous AI Agent (with YoloAutonomousMesh SDK)
+         │
+         │  1. Generates data payload
+         │  2. Snapshots precise timestamp (nanoseconds)
+         │  3. Entangles payload + timestamp + current_state_root (N-1)
+         │
+         ▼  HTTPS POST Request
+    [ EDGE GATEWAY PORT 8000 ] 
+         │
+         ├──► Nginx Edge Proxy (nginx.conf)
+         │      │ 
+         │      └──► Limits incoming connection burst zone to 30 r/s
+         │
+         ▼
+    [ FASTAPI APPARATUS WORKER SPACE ]
+         │
+         ├──► YoloStructuralSanitizerMiddleware
+         │      │ 
+         │      ├──► Enforces 2MB maximum payload ceiling
+         │      └──► Drops multipart nested bracket forms (depth > 5)
+         │
+         ▼  Parsed Content Passed to Engine
+    [ KINETIC MUTATION BACKPLANE ]
+         │
+         ├──► verify_payload_mac()
+         │      │
+         │      └──► Validates 512-bit post-quantum SHA3 symmetric digest
+         │
+         ▼  Authenticity Confirmed
+    [ YoloOmissionEvidentEngine ]
+         │
+         ├──► Pulls current expected index from isolated tenant cache
+         │
+         ├──► ASSERTION: Is incoming_sequence == current_expected?
+         │      │
+         │      ├───► [IF GREATER] ──► 409 OMISSION_DETECTED (Drop & Alert)
+         │      └───► [IF LESS]    ──► 409 REPLAY_ATTACK (Drop & Reject)
+         │
+         ▼  Sequence Verified Omission-Free
+    [ FLUID STATE MACHINE ENCLAVE MUTATION ]
+         │
+         ├──► Recalculates expected verification space inside CPU memory
+         ├──► Seals transaction at index N
+         └──► MUTATION: current_state_root = SHA512(State_Root + Payload + Token)
+                │
+                └──► Shuts down current key space permanently
+                └──► Forges next-generation key space for index N+1
+[ LOCAL REPLICATION HUB-AND-SPOKE MESH ]
+  Sovereign Multi-Region Router (multi_region_router.py)
+         │
+         ├──► Groups omission-checked transaction blocks into secure batches
+         │
+         ▼  Asynchronous Cross-Region Sync (Kyber-1024 / ML-KEM Envelope)
+  CENTRAL REPLICATION HUB (Global Ledger Core)
+         │
+         ├──► YoloTelemetryDataMigrator (Drains hot caches via transactional pipelines)
+         │
+         ▼  Batch Commits Executed
+[ PERMANENT IMMUTABLE DATA VAULTS ]
+  Base Cobalt Layer-2 Network  ◄───►  Arweave Decentralized Archive
+  (On-Chain State Commitments)         (Permanent, Un-Wipeable Log Storage)
