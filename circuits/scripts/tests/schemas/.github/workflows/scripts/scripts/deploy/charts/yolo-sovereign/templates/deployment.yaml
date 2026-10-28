@@ -1,0 +1,66 @@
+# ==============================================================================
+# SECTION 36: GOVCLOUD COMPLIANT KUBERNETES DEPLOYMENT MANIFEST (Helm Template)
+# ==============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yolo-sovereign-core
+  labels:
+    app.kubernetes.io/name: yolo-sovereign
+    tier: backend-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: yolo-sovereign-pod
+  template:
+    metadata:
+      labels:
+        app: yolo-sovereign-pod
+    spec:
+      # Enforce thread-level process network separation constraints
+      shareProcessNamespace: false
+      containers:
+        - name: api-worker
+          image: yolo-master-core:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+              name: http-edge
+          env:
+            - name: REDIS_URL
+              value: "redis://yolo-redis-cluster:6379/0"
+            - name: BASE_RPC_URL
+              value: "https://base.org"
+          
+          # Rigid kernel-level security contextual constraints configuration
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          # Dynamic health evaluation checkpoints
+          livenessProbe:
+            httpGet:
+              path: /v2/health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /v2/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+          resources:
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
