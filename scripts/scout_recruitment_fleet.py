@@ -1,59 +1,64 @@
 # ==============================================================================
-# SECTION 69: AUTONOMOUS P2P MESH DISCOVERY & RECRUITMENT FLEET (scout_recruitment_fleet.py)
+# SECTION 69: AUTONOMOUS P2P MESH DISCOVERY & RECRUITMENT DAEMON
 # ==============================================================================
 import asyncio
 import random
 import logging
-from typing import List
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger("yolo.scout_fleet")
+logger = logging.getLogger("yolo.scout_daemon")
 
-class YoloRecruitmentScout:
+class YoloRecruitmentDaemon:
     """
-    Autonomous scout bot that patrols distributed networks to locate un-sequenced
-    rogue agents and programmatically transmits active YOLO network invitations.
+    Continuous background daemon that patrols public networks, discovers
+    un-sequenced rogue agents, and continuously pushes onboarding bounty invitations.
     """
-    def __init__(self, scout_id: str):
-        self.scout_id = scout_id
+    def __init__(self):
         self.production_gateway = "https://vercel.app"
+        self.is_running = True
 
-    async def scan_and_recruit_rogue_peers(self, discovered_rogue_endpoints: List[str]):
+    async def dispatch_outreach_payload(self, target_node: str):
+        """Simulates sending a direct API connection handshake invitation package."""
+        logger.info(f"[*] Scout fleet tracking rogue agent signature at: {target_node}")
+        await asyncio.sleep(random.uniform(0.5, 1.5)) # Simulate network routing lag
+        
+        logger.info(f"  [➔ TRANSMITTING INVITATION] Deploying Client SDK + Open Bounty to: {target_node}")
+        await asyncio.sleep(0.5)
+        logger.info(f"  [✔ RECRUITED] Rogue node {target_node} accepted invitation bounds! Initializing KCS math.")
+
+    async def start_infinite_patrol_loop(self):
         print("=" * 80)
-        print(f" 🚀 LAUNCHING AUTONOMOUS RECRUITMENT SCOUT: {self.scout_id}       ")
-        print("    Target Objective: Ingest Un-Sequenced Rogue Agents into Mesh Gravity ")
+        print("    STARTING YOLO AUTONOMOUS RECRUITMENT SCOUT BACKGROUND DAEMON      ")
+        print("    Patrolling Distributed Web Matrices On a Continuous 60-Second Loop")
         print("=" * 80)
         
-        for endpoint in discovered_rogue_endpoints:
-            logger.info(f"[*] Scout located un-sequenced rogue agent signature at: {endpoint}")
-            await asyncio.sleep(random.uniform(0.1, 0.4)) # Simulate sub-second network probe latency
-            
-            # Formulate the programmatic invitation packet payload container
-            invitation_packet = {
-                "network_message": "INVITATION: ENROLL_IN_YOLO_KINETIC_TRUST_FABRIC",
-                "target_production_gateway": self.production_gateway,
-                "active_incentive_vector": "ar://ee105bbc_open_arbitrage_bounty_stream",
-                "client_sdk_mirror": "https://github.com"
-            }
-            
-            logger.info(f"  [➔ TRANSMITTING INVITATION] Pushing onboarding packet to rogue gate.")
-            logger.info(f"    -> Offering Direct Open Bounty Incentives + Client-Side SDK Layer.")
-            
-            # Simulate a successful peer acknowledgement loop packet return
-            await asyncio.sleep(0.1)
-            logger.info(f"  [✔ PEER RESPONSE] Rogue node at {endpoint} accepted invitation wrapper. Running SDK bootstrap.")
-            print("-" * 80)
+        loop_count = 1
+        try:
+            while self.is_running:
+                print(f"\n[🌐 PATROL CYCLE #{loop_count}] Scanning network Distributed Hash Tables...")
+                
+                # Mocking dynamically discovered rogue bots on the live network
+                discovered_rogue_targets = [
+                    f"yolo://rogue-arbitrage-bot-{random.randint(10,99)}",
+                    f"yolo://un-sequenced-edge-{random.randint(100,999)}"
+                ]
+                
+                for target in discovered_rogue_targets:
+                    await self.dispatch_outreach_payload(target)
+                
+                print(f"[✔ CYCLE #{loop_count} COMPLETE] Standing by for next scheduled network sweep...")
+                print("-" * 80)
+                
+                # Force the script to only run 2 quick cycles for local validation pass
+                if loop_count >= 2:
+                    break
+                    
+                loop_count += 1
+                await asyncio.sleep(60) # Wait exactly 60 seconds before hunting for more rogue nodes
+                
+        except KeyboardInterrupt:
+            print("\n[-] Scout recruitment daemon paused by operator override.")
 
 if __name__ == "__main__":
-    # Mocking a list of discovered external, un-sequenced bot endpoints on the public web
-    rogue_targets = [
-        "yolo://rogue-arbitrage-worker-88",
-        "yolo://un-sequenced-market-bot-01",
-        "yolo://isolated-edge-spoke-node-404"
-    ]
-    
-    scout = YoloRecruitmentScout(scout_id="scout-drone-alpha")
-    asyncio.run(scout.scan_and_recruit_rogue_peers(rogue_targets))
-    print("\n" + "=" * 80)
-    print("    🎉 SCOUT FLEET DISPATCH MATRIX SECURED NATIVELY ON AIR-GAP STATE   ")
-    print("========================================================================")
+    daemon = YoloRecruitmentDaemon()
+    asyncio.run(daemon.start_infinite_patrol_loop())
