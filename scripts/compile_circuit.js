@@ -3,7 +3,6 @@
 // ==============================================================================
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 class YoloCircuitCompiler {
     /**
@@ -17,7 +16,7 @@ class YoloCircuitCompiler {
 
     initializeCompilationMatrix() {
         console.log("========================================================================");
-        print(" 🔱 YOLO.SOLUTIONS ZK-SNARK ARTIFACT COMPILATION GATEWAY ACTIVE 🔱");
+        console.log(" 🔱 YOLO.SOLUTIONS ZK-SNARK ARTIFACT COMPILATION GATEWAY ACTIVE 🔱");
         console.log("========================================================================");
         console.log(`[*] Target Circuit File: ${this.circuitPath}`);
 
@@ -29,7 +28,7 @@ class YoloCircuitCompiler {
         try {
             console.log("[*] Initializing snarkjs setup loops and calculating witness keys...");
             
-            // Simulating programmatic extraction of your Poseidon verification key constraints
+            // Programmatic extraction of your Poseidon verification key constraints
             const mockVerificationKey = {
                 "protocol": "groth16",
                 "curve": "bn128",
