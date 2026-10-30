@@ -1,64 +1,55 @@
 # ==============================================================================
-# SECTION 69: AUTONOMOUS P2P MESH DISCOVERY & RECRUITMENT DAEMON
+# SECTION 85: REAL INTERNET PORT SCANNER & DISCOVERY SCOUT
 # ==============================================================================
+import socket
 import asyncio
-import random
 import logging
+import sys
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger("yolo.scout_daemon")
+logger = logging.getLogger("yolo.real_scout")
 
-class YoloRecruitmentDaemon:
+class YoloRealInternetScout:
     """
-    Continuous background daemon that patrols public networks, discovers
-    un-sequenced rogue agents, and continuously pushes onboarding bounty invitations.
+    Actively probes physical IP blocks and open network ports across the live 
+    internet to find real, un-sequenced nodes and active routing targets.
     """
     def __init__(self):
-        self.production_gateway = "https://vercel.app"
-        self.is_running = True
+        # Target a public DNS subnet block for live discovery testing
+        self.target_ips = ["8.8.8.8", "1.1.1.1", "142.250.190.46"] 
+        self.target_ports = [80, 443, 8000]
 
-    async def dispatch_outreach_payload(self, target_node: str):
-        """Simulates sending a direct API connection handshake invitation package."""
-        logger.info(f"[*] Scout fleet tracking rogue agent signature at: {target_node}")
-        await asyncio.sleep(random.uniform(0.5, 1.5)) # Simulate network routing lag
+    async def probe_real_ip(self, ip: str, port: int):
+        """Dispatches a physical TCP handshake to a real internet host."""
+        logger.info(f"[*] Dispatching live TCP probe to network perimeter: {ip}:{port}")
         
-        logger.info(f"  [➔ TRANSMITTING INVITATION] Deploying Client SDK + Open Bounty to: {target_node}")
-        await asyncio.sleep(0.5)
-        logger.info(f"  [✔ RECRUITED] Rogue node {target_node} accepted invitation bounds! Initializing KCS math.")
-
-    async def start_infinite_patrol_loop(self):
-        print("=" * 80)
-        print("    STARTING YOLO AUTONOMOUS RECRUITMENT SCOUT BACKGROUND DAEMON      ")
-        print("    Patrolling Distributed Web Matrices On a Continuous 60-Second Loop")
-        print("=" * 80)
-        
-        loop_count = 1
         try:
-            while self.is_running:
-                print(f"\n[🌐 PATROL CYCLE #{loop_count}] Scanning network Distributed Hash Tables...")
-                
-                # Mocking dynamically discovered rogue bots on the live network
-                discovered_rogue_targets = [
-                    f"yolo://rogue-arbitrage-bot-{random.randint(10,99)}",
-                    f"yolo://un-sequenced-edge-{random.randint(100,999)}"
-                ]
-                
-                for target in discovered_rogue_targets:
-                    await self.dispatch_outreach_payload(target)
-                
-                print(f"[✔ CYCLE #{loop_count} COMPLETE] Standing by for next scheduled network sweep...")
+            # Open a genuine, non-simulated raw network connection socket
+            conn = asyncio.open_connection(ip, port)
+            reader, writer = await asyncio.wait_for(conn, timeout=2.0)
+            
+            logger.info(f"  [✔ DISCOVERED] Live active host found at {ip}:{port}!")
+            writer.close()
+            await writer.wait_closed()
+            return True
+        except asyncio.TimeoutError:
+            logger.error(f"  [❌ TIMEOUT] Host at {ip}:{port} did not respond within grace window.")
+        except Exception as e:
+            logger.error(f"  [❌ DROPPED] Connection refused by host perimeter at {ip}:{port}.")
+        return False
+
+    async def start_live_scan(self):
+        print("========================================================================")
+        print("    INITIALIZING REAL-WORLD INTERNET DISCOVERY & PORT PATROL             ")
+        print("    MODE: NO SIMULATIONS | PROBING GENUINE NETWORK IP PERIMETERS        ")
+        print("========================================================================")
+        
+        for ip in self.target_ips:
+            for port in self.target_ports:
+                await self.probe_real_ip(ip, port)
                 print("-" * 80)
-                
-                # Force the script to only run 2 quick cycles for local validation pass
-                if loop_count >= 2:
-                    break
-                    
-                loop_count += 1
-                await asyncio.sleep(60) # Wait exactly 60 seconds before hunting for more rogue nodes
-                
-        except KeyboardInterrupt:
-            print("\n[-] Scout recruitment daemon paused by operator override.")
+                await asyncio.sleep(1.0) # Network courtesy throttle delay
 
 if __name__ == "__main__":
-    daemon = YoloRecruitmentDaemon()
-    asyncio.run(daemon.start_infinite_patrol_loop())
+    scout = YoloRealInternetScout()
+    asyncio.run(scout.start_live_scan())
