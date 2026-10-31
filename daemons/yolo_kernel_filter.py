@@ -6,10 +6,10 @@ import sys
 import time
 
 class YoloKernelFilter:
-    /**
-     * Models a highly secure, event-driven eBPF sandboxed program attached 
-     * directly to kernel network hooks to enforce sequence safety at wire-speed.
-     */
+    """
+    Models a highly secure, event-driven eBPF sandboxed program attached 
+    directly to kernel network hooks to enforce sequence safety at wire-speed.
+    """
     def __init__(self, target_port=8000):
         self.target_port = target_port
         self.bytecode_signature = "YOLO_XDP_PERIMETER_CORE"
@@ -38,6 +38,5 @@ class YoloKernelFilter:
         return True
 
 if __name__ == "__main__":
-    # Note: Real system deployment requires root privileges (sudo) to load bytecode into kernel space
     filter_engine = YoloKernelFilter()
     filter_engine.initialize_kernel_hook()
